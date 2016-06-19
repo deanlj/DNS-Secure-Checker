@@ -15,6 +15,15 @@ func ExtractLastRow(dataRow []string) []string {
 	return retlist
 }
 
+func ReversIP(ip string) string {
+	s := strings.Split(ip, ".")
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+		s[i], s[j] = s[j], s[i]
+	}
+	reversed := strings.Join(s, ".")
+	return reversed
+}
+
 // CompareReturnArray 比较两个数组对象是否相等（排序以后的数组对象元素）
 func CompareReturnArray(a []string, b []string) bool {
 	if a == nil && b == nil {

@@ -68,3 +68,5 @@ _testmain.go
 *.prof
 
 go-web/src/github.com/miekg/dns/
+
+go-web/src/golang.org/x/tools/
