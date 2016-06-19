@@ -15,6 +15,27 @@ func ExtractLastRow(dataRow []string) []string {
 	return retlist
 }
 
+func ArrayWithoutSameItem(arr []string) []string {
+	setArray := []string{}
+	if len(arr) == 0 {
+		return arr
+	} else {
+		for _, s := range arr {
+			setFlag := true
+			for _, t := range setArray {
+				if s == t {
+					setFlag = false
+					break
+				}
+			}
+			if setFlag == true {
+				setArray = append(setArray, s)
+			}
+		}
+	}
+	return setArray
+}
+
 func ReversIP(ip string) string {
 	s := strings.Split(ip, ".")
 	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {

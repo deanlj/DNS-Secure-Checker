@@ -2,12 +2,8 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"strconv"
 
 	"DNSQuery"
-
-	"github.com/miekg/dns"
 )
 
 const (
@@ -16,7 +12,7 @@ const (
 )
 
 func main() {
-	domain := "cnnic.cn"
+	domain := "baidu.com"
 	// 1-获取IPV4地址
 	AList, err := DNSQuery.ProcessGetIpv4List(domain)
 	if err != nil {
@@ -60,123 +56,73 @@ func main() {
 	}
 	//
 	//　查询是否获得权限去区域传输
-	ableAxfr, ableAxfrList, err := QueryAxfr(domain, NsList, Port)
-	if err != nil {
-		fmt.Printf("%v", err)
+
+	if ok, alarm, err := DNSQuery.ProcessCheckAxfrZoneTransfer(domain, NsList); err != nil {
+		fmt.Printf("[x]6-Check zone transfer responses for %s fail: %v\n", domain, err)
+	} else if ok == true {
+		fmt.Printf("[*]6-Check zone transfer responses for %s success: all ns close zone transfer\n", domain)
+	} else if ok == false && len(alarm) > 0 {
+		fmt.Printf("[x]6-Check zone transfer responses for %s failed with error: %v\n", domain, alarm)
+	}
+
+	// 查询是否支持TCP链接
+	if ok, supportList, err := DNSQuery.ProcessCheckTCPSupport(domain, NsList); err != nil {
+		fmt.Printf("[x]7-Check TCP responses for %s fail: %v\n", domain, err)
+	} else if ok == true {
+		fmt.Printf("[*]7-Check TCP responses for %s  all nameservers response success\n", domain)
+	} else if ok == false && len(supportList) > 0 {
+		fmt.Printf("[x]7-Check TCP responses for %s  part of nameservers response success:%v\n", domain, supportList)
 	} else {
-		if ableAxfr {
-			fmt.Printf("\n存在可区域传输的NS服务器：\n%v\n", ableAxfrList)
-		} else {
-			fmt.Printf("\n不存在可区域传输的NS服务器\n")
-		}
+		fmt.Printf("[x]7-Check TCP responses for %s  no nameservers response success\n", domain)
 	}
-	//
-	//
-	// // 查询是否支持tcp查询
-	// isSupportTcp,supportTCPList,err:=CheckTCPSupport(domain,NsList,Port)
-	// if err!=nil{
-	// 	fmt.Printf("\n查询TCP支持出错:%v\n",err)
-	// }else{
-	// 	if isSupportTcp{
-	// 		fmt.Printf("\nNS服务器全部支持TCP传输\n")
-	// 	}else if len(supportTCPList)>0{
-	// 		fmt.Printf("\nNS服务器部分支持TCP传输：%v\n",supportTCPList)
-	// 	}else{
-	// 		fmt.Printf("\nNS服务器不支持TCP传输\n")
-	// 	}
-	// }
-	// MXList,_,err:=QueryFormat(domain, dns.TypeMX," MX ",RecursiveServer, Port)
-	// if err!=nil{
-	// 	log.Panicf("%v",err);
-	// }
-	// fmt.Printf("\n%v\n",MXList)
-	//
-	// TXTList,_,err:=QueryFormat(domain, dns.TypeTXT," TXT ",RecursiveServer, Port)
-	// if err!=nil{
-	// 	log.Panicf("%v",err);
-	// }
-	// fmt.Printf("\n%v\n",TXTList)
-	//
-	// for _,ip:= range(AList){
-	// 	answer,err:=QueryPTR(ip,RecursiveServer, Port)
-	// 	if err!=nil{
-	// 		fmt.Println("Error found in PTR Quering");
-	// 	}else if answer!=""{
-	// 		fmt.Printf("\n%v have Ptr: %v\n",ip,answer)
-	// 	}
-	// }
-	SOANumberList := []string{}
-	SOAParams := map[string]int{}
-	for i, ns := range NsList {
-		SOAList, _, err := DNSQuery.QuerySOA(domain, dns.TypeSOA, " SOA ", ns, Port)
+
+	// 获取mx记录
+	MXList, err := DNSQuery.ProcessGetMXList(domain)
+	if err != nil {
+		fmt.Printf("[x]8-Get MX list for %s fail: %v\n", domain, err)
+	} else {
+		fmt.Printf("[*]8-Get Mx  for %s success: %v\n", domain, MXList)
+	}
+
+	// 获取txt记录
+	TXTList, err := DNSQuery.ProcessGetTXTList(domain)
+	if err != nil {
+		fmt.Printf("[x]8-Get TXT list for %s fail: %v\n", domain, err)
+	} else {
+		fmt.Printf("[*]8-Get TXT for %s success: %v\n", domain, TXTList)
+	}
+
+	// 获取a记录的ptr记录
+	for _, ip := range AList {
+		ptr, err := DNSQuery.ProcessCheckPTR(ip)
 		if err != nil {
-			log.Panicf("%v", err)
-		}
-
-		if len(SOAList) > 10 {
-			fmt.Printf("\n%v\n", SOAList[6])
-			SOANumberList = append(SOANumberList, SOAList[6])
-			if i == len(NsList)-1 {
-				SOAParams["TTL"], _ = strconv.Atoi(SOAList[1])
-				SOAParams["Refresh"], _ = strconv.Atoi(SOAList[7])
-				SOAParams["Retry"], _ = strconv.Atoi(SOAList[8])
-				SOAParams["Expire"], _ = strconv.Atoi(SOAList[9])
-				SOAParams["minimum"], _ = strconv.Atoi(SOAList[10])
-			}
-		}
-	}
-	for i, numberString := range SOANumberList {
-		if SOANumberList[0] == numberString {
-			fmt.Printf("SOA Number is same %s-%s: %s-%s\n", NsList[0], SOANumberList[0], NsList[i], numberString)
-			continue
+			fmt.Printf("[x]9-Get PTR for %s fail: %v\n", ip, err)
+		} else if ptr == "" {
+			fmt.Printf("[x]9-Get PTR for %s failed with no ptr records\n", ip)
 		} else {
-			fmt.Printf("SOA Number is not same %s-%s: %s-%s\n", NsList[0], SOANumberList[0], NsList[i], numberString)
-		}
-	}
-	// fmt.Printf("%v", SOAParams)
-	if len(SOAParams) == 5 {
-		alarmStrings := DNSQuery.CheckSOAParam(SOAParams)
-		if len(alarmStrings) == 0 {
-			fmt.Printf("All soa params is right\n")
-		} else {
-			fmt.Printf("Checking SOA with default value: %d warnings founded\n", len(alarmStrings))
-			fmt.Printf("SOA alarms showing: %v\n", alarmStrings)
+			fmt.Printf("[*]9-Get PTR for %s success : %s\n", ip, ptr)
 		}
 	}
 
-	//获取所有ns的A地址
-	NsListArray := []string{}
-	for _, ns := range NsList {
-		NsAList, _, err := DNSQuery.QueryFormat(ns, dns.TypeA, " A ", RecursiveServer, Port)
-		if err != nil {
-			log.Panicf("%v", err)
+	isSameDesc, isScopeRigthDesc, err := DNSQuery.ProcessCheckSOA(domain, NsList)
+	if err != nil {
+		fmt.Printf("[x]10-Peocessing SOA Check for %s fail: %v\n", domain, err)
+	}
+	if len(isSameDesc) > 0 || len(isScopeRigthDesc) > 0 {
+		if len(isSameDesc) > 0 {
+			fmt.Printf("[x]10-Peocessing SOA Check for %s fail: %v\n", domain, isSameDesc)
 		}
-		NsListArray = append(NsListArray, NsAList...)
-		// fmt.Printf("\n%v\n",NsAList)
+		if len(isScopeRigthDesc) > 0 {
+			fmt.Printf("[x]10-Peocessing SOA Check for %s fail: %v\n", domain, isScopeRigthDesc)
+		}
+	} else {
+		fmt.Printf("[*]10-Peocessing SOA Check for %s success", domain)
 	}
 
-	fmt.Printf("%v", NsListArray)
-
-	// 获取所有ns a 地址的as 号
-
-	// 203.119.28.5----24151
-	// [5.26.119.203.origin.asn.cymru.com. 14399 IN TXT "24406 24409 | 203.119.26.0/24 | CN | apnic | 2004-04-21"]
-	// 203.119.26.5----24406 24409
-	// [5.29.119.203.origin.asn.cymru.com. 14399 IN TXT "24151 24406 24409 | 203.119.29.0/24 | CN | apnic | 2004-04-21"]
-	// 203.119.29.5----24151 24406 24409
-	// [5.25.119.203.origin.asn.cymru.com. 13925 IN TXT "24151 | 203.119.25.0/24 | CN | apnic | 2004-04-21"]
-	// 203.119.25.5----24151
-	// [5.27.119.203.origin.asn.cymru.com
-
-	for _, ip := range NsListArray {
-		asn, err := DNSQuery.QueryASN(ip)
-		if err != nil {
-			fmt.Printf("%v\n", err)
-		} else {
-			if len(asn) != 0 {
-				fmt.Printf("%v\n", asn)
-			}
-		}
+	if asnlist, err := DNSQuery.ProcessGetASN(NsList); err == nil {
+		fmt.Printf("[*]11-Processing Get ASN for name servers success: %v\n", asnlist)
+	} else {
+		fmt.Printf("[x]11-Processing Get ASN for name servers failed with error: %v\n", err)
 	}
 
 }

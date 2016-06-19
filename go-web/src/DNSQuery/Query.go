@@ -1,7 +1,6 @@
 package DNSQuery
 
 import (
-	"fmt"
 	"net"
 	"strconv"
 	"strings"
@@ -14,14 +13,11 @@ import (
 // QueryFormat 展示格式化的数据输出
 func QueryFormat(domain string, typeQuery uint16, typeString string, server string, port int) ([]string, time.Duration, error) {
 
-	fmt.Printf("---------------------%s----------------\n", typeString)
 	// 查询域名的A记录
 	answerA, rtt, err := Query(domain, typeQuery, RecursiveServer, Port)
 	if err != nil {
 		return nil, time.Duration(0), err
 	}
-	// 查看查询A的返回时间
-	fmt.Printf("查询%s记录的返回时间：\n%v\n", typeString, rtt)
 	if typeQuery != dns.TypeTXT {
 		list := util.ExtractLastRow(answerA)
 		return list, rtt, nil
@@ -66,7 +62,7 @@ func QueryTCP(domain string, typeQuery uint16, server string, port int) ([]strin
 	m1.Question[0] = dns.Question{dns.Fqdn(domain), typeQuery, dns.ClassINET}
 	// c := new(dns.Client)
 	in, err := dns.ExchangeConn(conn, m1)
-	fmt.Printf("%v", in)
+	// fmt.Printf("%v", in)
 	if err != nil {
 		conn.Close()
 		return nil, err
@@ -117,7 +113,7 @@ func QueryAxfr(domain string, nslist []string, port int) (bool, []string, error)
 	returnList := []string{}
 	for _, nameserver := range nslist {
 		data, _, err := Query(domain, dns.TypeAXFR, nameserver, port)
-		fmt.Printf("%v", data)
+		// fmt.Printf("%v", data)
 		if err != nil {
 			return false, returnList, err
 		}
@@ -149,9 +145,6 @@ func QueryPTR(ip string, server string, port int) (string, error) {
 }
 
 func QuerySOA(domain string, typeQuery uint16, typeString string, server string, port int) ([]string, time.Duration, error) {
-
-	fmt.Printf("---------------------%s----------------\n", typeString)
-	// 查询域名的A记录
 	answers, rtt, err := Query(domain, typeQuery, server, Port)
 	if err != nil {
 		return []string{}, time.Duration(0), err
