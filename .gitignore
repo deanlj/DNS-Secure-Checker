@@ -33,6 +33,11 @@ jspm_packages
 # Optional npm cache directory
 .npm
 
+go-web/bin
+go-web/pkg
+go-web/src/github.com
+go-web/src/gopkg.in
+
 # Optional REPL history
 .node_repl_history
 
