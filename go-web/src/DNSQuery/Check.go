@@ -2,8 +2,6 @@ package DNSQuery
 
 import (
 	"fmt"
-	"log"
-	"util"
 
 	// "util"
 
@@ -41,32 +39,6 @@ func CheckSOAParam(SOAParams map[string]int) []string {
 		}
 	}
 	return alarmString
-}
-
-// CheckNSResponse 查看NS是否都有响应
-func CheckNSResponse(domain string, nslist []string) (string, error) {
-	nsReturnArrays := map[string][]string{}
-	oneKey := ""
-	for _, ns := range nslist {
-		answers, rtt, err := Query(domain, dns.TypeA, ns, Port)
-		if err != nil {
-			log.Panicf("%v", err)
-		}
-		if nsReturnArrays[ns] == nil {
-			nsReturnArrays[ns] = util.ExtractLastRow(answers)
-		}
-		fmt.Printf("查询%s的返回时间：%v\n", ns, rtt)
-		// fmt.Printf("%v\n", answers)
-		oneKey = ns
-	}
-	for key := range nsReturnArrays {
-		if util.CompareReturnArray(nsReturnArrays[key], nsReturnArrays[oneKey]) != true {
-			fmt.Printf("查询%s和%s返回数据不一致\n", key, oneKey)
-		} else {
-			fmt.Printf("查询%s和%s返回数据一致\n", key, oneKey)
-		}
-	}
-	return fmt.Sprint(""), nil
 }
 
 func CheckTCPSupport(domain string, nslist []string, port int) (bool, []string, error) {

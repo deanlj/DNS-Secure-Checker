@@ -17,52 +17,59 @@ const (
 
 func main() {
 	domain := "cnnic.cn"
-	AList, _, err := DNSQuery.QueryFormat(domain, dns.TypeA, " A ", RecursiveServer, Port)
+	// 1-获取IPV4地址
+	AList, err := DNSQuery.ProcessGetIpv4List(domain)
 	if err != nil {
-		log.Panicf("%v", err)
+		fmt.Printf("[x]1-ProcessGetIpv4List fail: %v\n", err)
+	} else {
+		fmt.Printf("[*]1-ProcessGetIpv4List success: %v\n", AList)
 	}
-	fmt.Printf("\n%v\n", AList)
 
-	AAAAList, _, err := DNSQuery.QueryFormat(domain, dns.TypeAAAA, " AAAA ", RecursiveServer, Port)
+	// 2-获取IPV6地址
+	AAAAList, err := DNSQuery.ProcessGetIpv4List(domain)
 	if err != nil {
-		log.Panicf("%v", err)
+		fmt.Printf("[x]2-ProcessGetIpv6List fail: %v\n", err)
+	} else {
+		fmt.Printf("[*]2-ProcessGetIpv6List success: %v\n", AAAAList)
 	}
-	fmt.Printf("\n%v\n", AAAAList)
 
-	NsList, _, err := DNSQuery.QueryFormat(domain, dns.TypeNS, " NS ", RecursiveServer, Port)
+	// 3-获取NS记录
+	NsList, err := DNSQuery.ProcessGetNSList(domain)
 	if err != nil {
-		log.Panicf("%v", err)
+		fmt.Printf("[x]3-Get hostName and version list for %s fail: %v\n", domain, err)
+	} else {
+		fmt.Printf("[*]3-Get hostName and version list for %s success: %v\n", domain, NsList)
 	}
-	fmt.Printf("\n%v\n", NsList)
 
-	// fmt.Printf("\nHost name searching....\n")
-	// for _,ns:=range(NsList){
-	// 	hostname,versionName,err:=QueryHostName(ns,Port)
-	// 	if err!=nil{
-	// 		fmt.Printf("Host name searching went wrong %v",err)
-	// 	}else if versionName!="" || hostname !=""{
-	// 		fmt.Printf("Host name for %s is\n %s \n %s\n",ns,hostname,versionName)
-	// 	}else{
-	// 		fmt.Printf("Host name for %s not found:%s\n",ns,err)
-	// 	}
-	// }
+	//  4 -获取所有NS的 hostname 或者version name
+
+	for _, ns := range NsList {
+		if host, version, err := DNSQuery.ProcessGetHostName(ns); err == nil {
+			fmt.Printf("[*]4-Get hostName and version list for %s success: %s - %s\n", ns, host, version)
+		} else {
+			fmt.Printf("[x]4-Get hostName and version list for %s fail: %v\n", ns, err)
+		}
+	}
+
+	if ok, alarmStrings, err := DNSQuery.ProcessCheckNSResponse(domain, NsList); err != nil {
+		fmt.Printf("[x]5-Check all ns responses for %s fail: %v\n", domain, err)
+	} else if ok == true && len(alarmStrings) == 0 {
+		fmt.Printf("[*]5-Check all ns responses for %s success\n", domain)
+	} else if ok == false && len(alarmStrings) > 0 {
+		fmt.Printf("[*]5-Check all ns responses for %s fail: %v\n", domain, alarmStrings)
+	}
 	//
-	//
-	//
-	// // 检查记录是否相同
-	// CheckNSResponse(domain, NsList)
-	//
-	// //　查询是否获得权限去区域传输
-	// ableAxfr,ableAxfrList,err:=QueryAxfr(domain,NsList,Port)
-	// if err!=nil{
-	// 	fmt.Printf("%v",err)
-	// }else{
-	// 	if ableAxfr{
-	// 		fmt.Printf("\n存在可区域传输的NS服务器：\n%v\n",ableAxfrList)
-	// 	}else{
-	// 		fmt.Printf("\n不存在可区域传输的NS服务器\n")
-	// 	}
-	// }
+	//　查询是否获得权限去区域传输
+	ableAxfr, ableAxfrList, err := QueryAxfr(domain, NsList, Port)
+	if err != nil {
+		fmt.Printf("%v", err)
+	} else {
+		if ableAxfr {
+			fmt.Printf("\n存在可区域传输的NS服务器：\n%v\n", ableAxfrList)
+		} else {
+			fmt.Printf("\n不存在可区域传输的NS服务器\n")
+		}
+	}
 	//
 	//
 	// // 查询是否支持tcp查询
