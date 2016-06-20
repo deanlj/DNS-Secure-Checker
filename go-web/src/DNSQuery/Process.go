@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 	"util"
-
 	"github.com/miekg/dns"
 )
 
@@ -55,7 +54,10 @@ func ProcessGetTXTList(domain string) ([]string, error) {
 	if err != nil {
 		return []string{}, err
 	}
-	return TXTList, nil
+	if len(TXTList)>0{
+		return util.ExtractLastRowWithQuotes(TXTList),nil
+	}
+	return []string{}, errors.New("No txt records found")
 }
 
 func ProcessGetHostName(ns string) (string, string, error) {

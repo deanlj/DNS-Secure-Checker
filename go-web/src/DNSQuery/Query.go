@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 	"util"
-
 	"github.com/miekg/dns"
 )
 
@@ -26,7 +25,6 @@ func QueryFormat(domain string, typeQuery uint16, typeString string, server stri
 	}
 
 }
-
 // Query 查询域名状态，参数分别为 查询类型 服务器IP 与 端口
 func Query(domain string, typeQuery uint16, server string, port int) ([]string, time.Duration, error) {
 	m1 := new(dns.Msg)
@@ -79,7 +77,7 @@ func QueryHostName(ns string, port int) (string, string, error) {
 	queryServer := ns + ":" + strconv.Itoa(port)
 	m := new(dns.Msg)
 	m.Id = dns.Id()
-	m.RecursionDesired = true
+	m.RecursionDesired = false
 	m.Question = make([]dns.Question, 1)
 	m.Question[0] = dns.Question{"hostname.bind.", dns.TypeTXT, dns.ClassCHAOS}
 	c := new(dns.Client)
@@ -90,8 +88,7 @@ func QueryHostName(ns string, port int) (string, string, error) {
 	}
 	hostname := ""
 	if len(in.Answer) > 0 {
-		hostname = in.Answer[0].String()
-
+		hostname = util.ExtractLastItemWithQuotes(in.Answer[0].String())
 	} else {
 		hostname = ""
 	}
@@ -101,7 +98,7 @@ func QueryHostName(ns string, port int) (string, string, error) {
 		return "", "", err
 	} else {
 		if len(in.Answer) > 0 {
-			return hostname, in.Answer[0].String(), nil
+			return hostname, util.ExtractLastItemWithQuotes(in.Answer[0].String()), nil
 		} else {
 			return hostname, "", nil
 		}

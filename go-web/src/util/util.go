@@ -3,6 +3,7 @@ package util
 import (
 	"sort"
 	"strings"
+	"regexp"
 )
 
 // ExtractLastRow 提取字符串数组中最后的一列数据
@@ -15,6 +16,21 @@ func ExtractLastRow(dataRow []string) []string {
 	return retlist
 }
 
+// baidu.com.		7199	IN	TXT	"google-site-verification=GHb98-6msqyx_qqjGl5eRatD3QTHyVB6-xQ3gJB5UwM"
+// baidu.com.		7199	IN	TXT	"v=spf1 include:spf1.baidu.com include:spf2.baidu.com include:spf3.baidu.com a mx ptr -all"
+func ExtractLastRowWithQuotes(dataRow []string) []string {
+	retlist := []string{}
+	re:=regexp.MustCompile(`\"[\s\S]+\"`)
+	for _, line := range dataRow {
+		data :=re.FindString(line)
+		retlist = append(retlist, data)
+	}
+	return retlist
+}
+func ExtractLastItemWithQuotes(data string) string {
+	re:=regexp.MustCompile(`\"[\s\S]+\"`)
+	return re.FindString(data)
+}
 func ArrayWithoutSameItem(arr []string) []string {
 	setArray := []string{}
 	if len(arr) == 0 {
