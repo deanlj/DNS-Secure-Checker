@@ -40,24 +40,3 @@ func CheckSOAParam(SOAParams map[string]int) []string {
 	}
 	return alarmString
 }
-
-// func CheckTCPSupport(domain string, nslist []string, port int) (bool, []string, error) {
-// 	// queryServer := ns + ":" + strconv.Itoa(port)
-// 	returnList := []string{}
-// 	for _, nameserver := range nslist {
-// 		data, err := QueryTCP(domain, dns.TypeA, nameserver, port)
-// 		// fmt.Printf("%v",data)
-// 		if err != nil {
-// 			continue
-// 		}
-// 		if data != nil && len(data) > 0 {
-// 			returnList = append(returnList, nameserver)
-// 		}
-// 	}
-
-// 	if len(returnList) == 0 {
-// 		return false, returnList, nil
-// 	} else {
-// 		return true, returnList, nil
-// 	}
-// }
