@@ -3,6 +3,7 @@ package Process
 import (
 	"DNSQuery"
 	"fmt"
+	"github.com/miekg/dns"
 )
 
 const (
@@ -10,116 +11,121 @@ const (
 	Port            = DNSQuery.Port
 )
 
-func ProcessMain(domain string) {
+func ProcessDNSMain(domain string) {
 	// 1-获取IPV4地址
-	AList, err := DNSQuery.ProcessGetIpv4List(domain)
+	AList, err := DNSQuery.GetIPv4List(domain,RecursiveServer,Port)
 	if err != nil {
-		fmt.Printf("[x]1-ProcessGetIpv4List fail: %v\n", err)
+		fmt.Printf("[x]Step-1 获取域名 %s A记录失败:%v\n",domain,err)
 	} else {
-		fmt.Printf("[*]1-ProcessGetIpv4List success: %v\n", AList)
+		fmt.Printf("[*]Step-1 获取域名 %s A记录成功: %v\n",domain,AList)
+		// // 获取a记录的ptr记录
+		for i, ip := range AList {
+			ptr, err := dns.ReverseAddr(ip)
+			if err != nil {
+				fmt.Printf("\t[x]Step-1-%d 获取域名 %s 的IP: %s 对应PTR记录失败:%v\n",i,domain,ip,err)
+			} else if len(ptr)==0 {
+				fmt.Printf("\t[x]Step-1-%d 获取域名 %s 的IP: %s 对应PTR记录为空\n",i,domain,ip)
+			} else {
+				fmt.Printf("\t[*]Step-1-%d 获取域名 %s 的IP: %s 对应PTR: %v\n",i,domain,ip,ptr)
+			}
+		}
 	}
 
 	// 2-获取IPV6地址
-	AAAAList, err := DNSQuery.ProcessGetIpv4List(domain)
+	AAAAList, err := DNSQuery.GetIPv6List(domain,RecursiveServer,Port)
 	if err != nil {
-		fmt.Printf("[x]2-ProcessGetIpv6List fail: %v\n", err)
+		fmt.Printf("[x]Step-2 获取域名 %s AAAA记录失败:%v\n",domain,err)
 	} else {
-		fmt.Printf("[*]2-ProcessGetIpv6List success: %v\n", AAAAList)
+		fmt.Printf("[*]Step-2 获取域名 %s AAAA记录成功: %v\n",domain,AAAAList)
 	}
 
 	// 3-获取NS记录
-	NsList, err := DNSQuery.ProcessGetNSList(domain)
+	NsList, err := DNSQuery.GetNSList(domain,RecursiveServer,Port)
 	if err != nil {
-		fmt.Printf("[x]3-Get hostName and version list for %s fail: %v\n", domain, err)
+		fmt.Printf("[x]Step-3 获取域名 %s NS记录失败:%v\n",domain,err)
 	} else {
-		fmt.Printf("[*]3-Get hostName and version list for %s success: %v\n", domain, NsList)
-	}
-
-	//  4 -获取所有NS的 hostname 或者version name
-
-	for _, ns := range NsList {
-		if host, version, err := DNSQuery.ProcessGetHostName(ns); err == nil {
-			fmt.Printf("[*]4-Get hostName and version list for %s success: %s - %s\n", ns, host, version)
-		} else {
-			fmt.Printf("[x]4-Get hostName and version list for %s fail: %v\n", ns, err)
+		fmt.Printf("[*]Step-3 获取域名 %s NS记录成功: %v\n",domain,NsList)
+		// 获取所有NS的 hostname
+		for i, ns := range NsList {
+			if host, err := DNSQuery.GetHostName(ns,RecursiveServer,Port); err == nil {
+				fmt.Printf("\t[*]Step-3-%d 获取域名 %s 的NS记录: %s 对应的hostname 成功: %v\n",i, domain,ns, host)
+			} else {
+				fmt.Printf("\t[x]Step-3-%d 获取域名 %s 的NS记录: %s 对应的hostname失败\n",i, domain,ns)
+			}
 		}
-	}
-
-	if ok, alarmStrings, err := DNSQuery.ProcessCheckNSResponse(domain, NsList); err != nil {
-		fmt.Printf("[x]5-Check all ns responses for %s fail: %v\n", domain, err)
-	} else if ok == true && len(alarmStrings) == 0 {
-		fmt.Printf("[*]5-Check all ns responses for %s success\n", domain)
-	} else if ok == false && len(alarmStrings) > 0 {
-		fmt.Printf("[*]5-Check all ns responses for %s fail: %v\n", domain, alarmStrings)
-	}
-	//
-	//　查询是否获得权限去区域传输
-
-	if ok, alarm, err := DNSQuery.ProcessCheckAxfrZoneTransfer(domain, NsList); err != nil {
-		fmt.Printf("[x]6-Check zone transfer responses for %s fail: %v\n", domain, err)
-	} else if ok == true {
-		fmt.Printf("[*]6-Check zone transfer responses for %s success: all ns close zone transfer\n", domain)
-	} else if ok == false && len(alarm) > 0 {
-		fmt.Printf("[x]6-Check zone transfer responses for %s failed with error: %v\n", domain, alarm)
-	}
-
-	// 查询是否支持TCP链接
-	if ok, supportList, err := DNSQuery.ProcessCheckTCPSupport(domain, NsList); err != nil {
-		fmt.Printf("[x]7-Check TCP responses for %s fail: %v\n", domain, err)
-	} else if ok == true {
-		fmt.Printf("[*]7-Check TCP responses for %s  all nameservers response success\n", domain)
-	} else if ok == false && len(supportList) > 0 {
-		fmt.Printf("[x]7-Check TCP responses for %s  part of nameservers response success:%v\n", domain, supportList)
-	} else {
-		fmt.Printf("[x]7-Check TCP responses for %s  no nameservers response success\n", domain)
+		// 获取所有NS的 version
+		for i, ns := range NsList {
+			if version, err := DNSQuery.GetVersionName(ns,RecursiveServer,Port); err == nil {
+				fmt.Printf("\t[*]Step-3-%d 获取域名 %s 的NS记录: %s 对应的version 成功: %v\n",i, domain,ns, version)
+			} else {
+				fmt.Printf("\t[x]Step-3-%d 获取域名 %s 的NS记录: %s 对应的version失败\n",i, domain,ns)
+			}
+		}
 	}
 
 	// 获取mx记录
-	MXList, err := DNSQuery.ProcessGetMXList(domain)
+	MXList, err := DNSQuery.GetMXList(domain,RecursiveServer,Port)
 	if err != nil {
-		fmt.Printf("[x]8-Get MX list for %s fail: %v\n", domain, err)
+		fmt.Printf("[x]Step-4 获取域名 %s MX记录失败:%v\n",domain,err)
 	} else {
-		fmt.Printf("[*]8-Get Mx  for %s success: %v\n", domain, MXList)
+		fmt.Printf("[*]Step-4 获取域名 %s MX记录成功: %v\n",domain,MXList)
 	}
+
 
 	// 获取txt记录
-	TXTList, err := DNSQuery.ProcessGetTXTList(domain)
+	TXTList, err := DNSQuery.GetTXTList(domain,RecursiveServer,Port)
 	if err != nil {
-		fmt.Printf("[x]8-Get TXT list for %s fail: %v\n", domain, err)
+		fmt.Printf("[x]Step-5 获取域名 %s TXT记录失败:%v\n",domain,err)
 	} else {
-		fmt.Printf("[*]8-Get TXT for %s success: %v\n", domain, TXTList)
+		fmt.Printf("[*]Step-5 获取域名 %s TXT记录成功: %v\n",domain,TXTList)
 	}
 
-	// 获取a记录的ptr记录
-	for _, ip := range AList {
-		ptr, err := DNSQuery.ProcessCheckPTR(ip)
-		if err != nil {
-			fmt.Printf("[x]9-Get PTR for %s fail: %v\n", ip, err)
-		} else if ptr == "" {
-			fmt.Printf("[x]9-Get PTR for %s failed with no ptr records\n", ip)
-		} else {
-			fmt.Printf("[*]9-Get PTR for %s success : %s\n", ip, ptr)
-		}
+
+	if ok, alarmStrings, err := DNSQuery.NSConsistencyCheck(domain, NsList,Port); err != nil {
+		fmt.Printf("[x]Step-6 域名　%s　的权威NS服务器一致性检查失败：%s: %v\n", domain, err)
+	} else if ok == true && len(alarmStrings) == 0 {
+		fmt.Printf("[*]Step-6 域名　%s　的权威NS服务器一致性检查成功，所有权威服务器数据返回一致\n", domain)
+	} else if ok == false && len(alarmStrings) > 0 {
+		fmt.Printf("[x]Step-6 域名　%s　的权威NS服务器一致性检查失败：%s: %v\n", domain, alarmStrings)
+	}
+	//　查询是否获得权限去区域传输
+
+	if ok, return_data, err := DNSQuery.AxfrCheck(domain, NsList,Port); err != nil {
+		fmt.Printf("[x]Step-7 域名　%s　的权威NS服务器去传送检查失败: %v\n", domain, err)
+	} else if ok == true {
+		fmt.Printf("[*]Step-7 域名　%s　的权威NS服务器区传送检查成功: 所有权威服务器均已关闭区传送\n", domain)
+	} else if ok == false && len(return_data) > 0 {
+		fmt.Printf("[x]Step-7 域名　%s　的权威NS服务器去传送检查失败,返回信息如下: \n\t%v\n", domain, return_data)
 	}
 
-	isSameDesc, isScopeRigthDesc, err := DNSQuery.ProcessCheckSOA(domain, NsList)
-	if err != nil {
-		fmt.Printf("[x]10-Peocessing SOA Check for %s fail: %v\n", domain, err)
-	}
-	if len(isSameDesc) > 0 || len(isScopeRigthDesc) > 0 {
-		if len(isSameDesc) > 0 {
-			fmt.Printf("[x]10-Peocessing SOA Check for %s fail: %v\n", domain, isSameDesc)
-		}
-		if len(isScopeRigthDesc) > 0 {
-			fmt.Printf("[x]10-Peocessing SOA Check for %s fail: %v\n", domain, isScopeRigthDesc)
-		}
-	} else {
-		fmt.Printf("[*]10-Peocessing SOA Check for %s success", domain)
+	// CheckTCPSupport查询是否支持TCP链接
+	if unsupport_list, err := DNSQuery.CheckTCPSupport(domain, NsList,Port); err != nil {
+		fmt.Printf("[x]Step-8 域名　%s　的权威NS服务器TCP检查失败: %v\n", domain, err)
+	} else if len(unsupport_list) == 0 {
+		fmt.Printf("[*]Step-8 域名　%s　的权威NS服务器TCP检查成功: 所有权威服务器均支持tcp连接\n", domain)
+	} else if len(unsupport_list) > 0 {
+		fmt.Printf("[x]Step-8 域名　%s　的权威NS服务器TCP检查失败,不支持的服务器列表如下: \n\t%v\n", domain, unsupport_list)
 	}
 
-	if asnlist, err := DNSQuery.ProcessGetASN(NsList); err == nil {
-		fmt.Printf("[*]11-Processing Get ASN for name servers success: %v\n", asnlist)
+
+	// isSameDesc, isScopeRigthDesc, err := DNSQuery.ProcessCheckSOA(domain, NsList)
+	// if err != nil {
+	// 	fmt.Printf("[x]10-Peocessing SOA Check for %s fail: %v\n", domain, err)
+	// }
+	// if len(isSameDesc) > 0 || len(isScopeRigthDesc) > 0 {
+	// 	if len(isSameDesc) > 0 {
+	// 		fmt.Printf("[x]10-Peocessing SOA Check for %s fail: %v\n", domain, isSameDesc)
+	// 	}
+	// 	if len(isScopeRigthDesc) > 0 {
+	// 		fmt.Printf("[x]10-Peocessing SOA Check for %s fail: %v\n", domain, isScopeRigthDesc)
+	// 	}
+	// } else {
+	// 	fmt.Printf("[*]10-Peocessing SOA Check for %s success", domain)
+	// }
+
+	if asnlist, err := DNSQuery.GetNSASN(NsList,RecursiveServer,Port); err == nil {
+		fmt.Printf("[*]Step-10 域名　%s　的权威NS服务器对应的ASN查询成功: %v\n", asnlist)
 	} else {
-		fmt.Printf("[x]11-Processing Get ASN for name servers failed with error: %v\n", err)
+		fmt.Printf("[x]Step-10 域名　%s　的权威NS服务器对应的ASN查询失败: %v\n", domain, err)
 	}
 }
