@@ -3,10 +3,9 @@ package main
 import "Process"
 
 func main() {
-	domain := "baidu.com"
-	// get dns information and find something wrong with it
-	// Process.ProcessMain(domain)
-
-	// get dnssec validation
+	domain := "icann.org"
+	// 完成常规DNS检查
+	Process.ProcessMain(domain)
+	//完成DNSSec验证流程
 	Process.ProcessDNSSecMain(domain)
 }
