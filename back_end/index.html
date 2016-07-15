@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>DNS安全检查</title>
+    <script src="//cdn.bootcss.com/socket.io/1.4.8/socket.io.js"></script>
+    <script src="//cdn.bootcss.com/jquery/2.2.4/jquery.js"></script>
+  </head>
+  <body>
+
+    <form>
+      <input name="domain" id="domain"/>
+      <button>提交域名</button>
+    </form>
+
+    <div id="result">
+    </div>
+    <div id="message">
+    </div>
+    <script>
+      var socket = io.connect('http://localhost:5000');
+      socket.on('domain-message', function(msg){
+        console.log(msg)
+        if(msg.Type&&msg.Type=='start'){
+          $('#result').append($('<ol>').text(msg.Message));
+        }else{
+          $('#result').append($('<li>').text(msg.Message));
+        }
+        //
+      });
+      socket.on('welcome',function(msg){
+         $('#result').append($('<li>').text(msg.Message));
+      })
+      socket.on('message',function(msg){
+         $('#message').append($('<li>').text(msg.Message));
+      })
+      $('form').submit(function(){
+         if( $('#domain').val() == ""){
+           alert("No Domain is submitted!");
+           return
+         }
+         socket.emit('domain', $('#domain').val());
+         $('#m').val('');
+         return false;
+      });
+    </script>
+  </body>
+</html>
