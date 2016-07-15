@@ -7,11 +7,6 @@ var io = require("socket.io")(http)
 var formatMessage=function(message,type,err){
   return {"Message":message,"Type":type,"Error":err||""};
 }
-
-
-
-
-
 // amqp code start point
 
 var amqp = require('amqplib/callback_api');
