@@ -2,10 +2,10 @@
 package DNSQuery
 
 import (
-	// "errors"
+	"errors"
 	"fmt"
 	"log"
-	"strconv"
+	// "strconv"
 	// "strconv"
 	// "strings"
 	"util"
@@ -216,42 +216,45 @@ func CheckTCPSupport(domain string, nslist []string, port int) ([]string, error)
 	return return_data, nil
 }
 
-func CheckSOAConsistency(domain string, nslist []string) ([]string, []string, error) {
-	SOANumberList := []string{}
+func CheckSOAConsistency(domain string, nslist []string) (map[string]string ,[]string, []string, error) {
+	SOANumberList := []int{}
 	SOAParams := map[string]int{}
-	isSameResult := []string{}
+	SOAParamsList:=map[string]string{}
+	Result := []string{}
 	for i, ns := range nslist {
-		SOAList, _, err := Query(domain, dns.TypeSOA, ns, Port)
+		answer, _, err := Query(domain, dns.TypeSOA, ns, Port)
 		if err != nil {
-			return []string{}, []string{}, err
+			return nil,nil,nil, err
 		}
-		if len(SOAList) > 10 {
-			SOANumberList = append(SOANumberList, SOAList[6])
-			if i == len(nslist)-1 {
-				SOAParams["TTL"], _ = strconv.Atoi(SOAList[1])
-				SOAParams["Refresh"], _ = strconv.Atoi(SOAList[7])
-				SOAParams["Retry"], _ = strconv.Atoi(SOAList[8])
-				SOAParams["Expire"], _ = strconv.Atoi(SOAList[9])
-				SOAParams["minimum"], _ = strconv.Atoi(SOAList[10])
-			}
+		SOA,ok:=answer[0].(*dns.SOA)
+		if ok==false{
+			return nil,nil,nil, errors.New("无法获得SOA记录")
 		}
+		SOANumberList = append(SOANumberList, int(SOA.Serial))
+		if i == len(nslist)-1 {
+			SOAParams["Refresh"]=int(SOA.Refresh)
+			SOAParams["Retry"]=int(SOA.Retry)
+			SOAParams["Expire"]=int(SOA.Expire)
+			SOAParams["minimum"]=int(SOA.Minttl)
+		}
+		SOAParamsList[ns]=SOA.String();
 	}
 	for i, numberString := range SOANumberList {
 		if SOANumberList[0] == numberString {
 			continue
 		} else {
-			isSameResult = append(isSameResult, fmt.Sprintf("SOA Number for %s is not same %s-%s: %s-%s\n", domain, nslist[0], SOANumberList[0], nslist[i], numberString))
+			Result = append(Result, fmt.Sprintf("域名 %s SOA号 %s 比对 %s-%s: %s-%s\n", domain, nslist[0], SOANumberList[0], nslist[i], numberString))
 		}
 	}
-	if len(SOAParams) == 5 {
+	if len(SOAParams) == 4 {
 		alarmStrings := CheckSOAParam(SOAParams)
 		if len(alarmStrings) == 0 {
-			return isSameResult, []string{}, nil
+			return SOAParamsList, Result, []string{}, nil
 		} else {
-			return isSameResult, alarmStrings, nil
+			return SOAParamsList, Result, alarmStrings, nil
 		}
 	}
-	return isSameResult, []string{}, nil
+	return SOAParamsList,Result, []string{}, nil
 }
 func GetASN(ip string) ([]string, error) {
 	asnList := []string{}

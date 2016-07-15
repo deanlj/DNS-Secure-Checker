@@ -106,19 +106,20 @@ func ProcessDNSMain(domain string) {
 		fmt.Printf("[x]Step-8 域名　%s　的权威NS服务器TCP检查失败,不支持的服务器列表如下: \n\t%v\n", domain, unsupport_list)
 	}
 
-	isSameDesc, isScopeRigthDesc, err := DNSQuery.CheckSOAConsistency(domain, NsList)
+	soa_list, result_list,alarm_list,err := DNSQuery.CheckSOAConsistency(domain, NsList)
 	if err != nil {
 		fmt.Printf("[x]Step-9 域名　%s　的 SOA 检查失败 %v\n", domain, err)
 	}
-	if len(isSameDesc) > 0 || len(isScopeRigthDesc) > 0 {
-		if len(isSameDesc) > 0 {
-			fmt.Printf("[x]Step-9 域名　%s　的 SOA 检查失败 %v\n", domain, isSameDesc)
+	fmt.Printf("[*]Step-9 域名　%s　的 SOA 获取成功：\n\t%+v\n", domain,soa_list)
+	if len(result_list) > 0 || len(alarm_list) > 0 {
+		if len(result_list) > 0 {
+			fmt.Printf("[x]Step-9 域名　%s　的 SOA 检查失败 %v\n", domain, result_list)
 		}
-		if len(isScopeRigthDesc) > 0 {
-			fmt.Printf("[x]Step-9 域名　%s　的 SOA 检查失败 %v\n", domain, isScopeRigthDesc)
+		if len(alarm_list) > 0 {
+			fmt.Printf("[x]Step-9 域名　%s　的 SOA 检查失败 %v\n", domain, alarm_list)
 		}
 	} else {
-		fmt.Printf("[*]Step-9 域名　%s　的 SOA 检查成功，所有SOA返回一致", domain)
+		fmt.Printf("[*]Step-9 域名　%s　的 SOA 检查成功，符合基本规范", domain)
 	}
 
 	if asnlist, err := DNSQuery.GetNSASN(NsList, RecursiveServer, Port); err == nil {

@@ -10,6 +10,7 @@ import (
 
 //CheckRootKey:检查根的DNSKEY的签名是否合法
 func CheckRootKey() {
+	fmt.Printf("\n-------------TrustChainCheck:.-----------\n\n")
 	rootDNSKeyList, rootRRSIGList, err := DNSQuery.GetDNSKEY(".", DNSQuery.RootServer, DNSQuery.Port)
 	if err != nil {
 		fmt.Printf("[x]暂时无法获取根证书:%v\n", err)
@@ -60,7 +61,7 @@ func CheckDomainTrustChain(domain string) {
 		fmt.Printf("[*]域名%v的rrset:\n\t%+v\n\tkey_tag = %v 和　签名机构　key_signer = %s\n", domain, *rr_list[i], domain_rrsig_key_tag, domain_rrsig_key_signer)
 		// 获得对应的key
 		// 获得ns服务器地址，带入上述的函数中获得key和rrsig
-		domain_rrsig_key_signer_ns, err := DNSQuery.GetNSList(domain_rrsig_key_signer, DNSQuery.RootServer, DNSQuery.Port)
+		domain_rrsig_key_signer_ns, err := DNSQuery.GetNSList(domain_rrsig_key_signer, DNSQuery.RecursiveServer, DNSQuery.Port)
 		if err != nil || len(domain_rrsig_key_signer_ns) == 0 {
 			fmt.Printf("[x]暂时无法获得签名者%v的ns记录:%v\n", domain_rrsig_key_signer, err)
 			return
@@ -77,7 +78,8 @@ func CheckDomainTrustChain(domain string) {
 					fmt.Printf("[x]验证失败")
 					return
 				} else {
-					fmt.Printf("[*]验证%s的RRSet签名成功", domain)
+
+					fmt.Printf("[*]验证%s的RRSet签名成功\n", domain)
 					break
 				}
 			}
@@ -95,12 +97,14 @@ func CheckDomainTrustChain(domain string) {
 	}
 }
 func CheckTrustChain(domain string) {
-	fmt.Printf("[*]开启域名%s的验证\n", domain)
+	fmt.Printf("[*]域名%s的信任连验证\n", domain)
 	// 获得ns服务器地址,直接向服务器请求dnskey记录
-
-	domain_ns_list, err := DNSQuery.GetNSList(domain, DNSQuery.RootServer, DNSQuery.Port)
-	if err != nil || len(domain_ns_list) == 0 {
+	domain_ns_list, err := DNSQuery.GetNSList(domain, DNSQuery.RecursiveServer, DNSQuery.Port)
+	if err != nil {
 		fmt.Printf("[x]暂时无法获得签名者%v的ns记录:%v\n", domain_ns_list, err)
+		return
+	}else if len(domain_ns_list) == 0{
+		fmt.Printf("[x]暂时无法获得签名者%v的ns记录:可能由于该域名存在cname记录，直接进入下一级别的验证\n", domain_ns_list)
 		return
 	}
 	fmt.Printf("[*]获得签名者%s的ns记录:%v\n", domain, domain_ns_list)
@@ -136,7 +140,7 @@ LABEL_KSK_CHECK_FINISH:
 	up_level_domain := strings.Join(strings.Split(domain, ".")[1:], ".")
 	fmt.Printf("[*]从父区%s获取域名%s的DS记录\n", up_level_domain, domain)
 
-	domain_ns, err := DNSQuery.GetNSList(domain, DNSQuery.RootServer, DNSQuery.Port)
+	domain_ns, err := DNSQuery.GetNSList(domain, DNSQuery.RecursiveServer, DNSQuery.Port)
 	if err != nil || len(domain_ns) == 0 {
 		fmt.Printf("[x]暂时无法获得%v的ns记录:%v\n", domain, err)
 		return
@@ -144,7 +148,7 @@ LABEL_KSK_CHECK_FINISH:
 	fmt.Printf("[*]已获得%v的ns记录%v\n", domain, domain_ns)
 
 	// 获取上层域名的ns服务器
-	up_level_domain_ns, err := DNSQuery.GetNSList(up_level_domain, DNSQuery.RootServer, DNSQuery.Port)
+	up_level_domain_ns, err := DNSQuery.GetNSList(up_level_domain, DNSQuery.RecursiveServer, DNSQuery.Port)
 	if err != nil || len(up_level_domain_ns) == 0 {
 		fmt.Printf("[x]暂时无法获得%v的ns记录:%v\n", up_level_domain, err)
 		return

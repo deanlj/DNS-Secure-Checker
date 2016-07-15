@@ -5,7 +5,7 @@ import (
 	"strconv"
 	// "strings"
 	"time"
-	// "util"
+	"fmt"
 	"github.com/miekg/dns"
 )
 
@@ -24,6 +24,7 @@ LABEL_RETRY:
 		if retry == 2 {
 			return nil, rtt, err
 		} else {
+			fmt.Printf("第　%d　次发送失败，重试...",retry)
 			retry++
 			goto LABEL_RETRY
 		}

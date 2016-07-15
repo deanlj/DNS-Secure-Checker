@@ -3,7 +3,7 @@ package DNSQuery
 import (
 	"strconv"
 	"time"
-
+	"fmt"
 	"github.com/miekg/dns"
 )
 
@@ -16,14 +16,16 @@ func _SendDNSSecRequest(domain string, authenticationServer string, port int, qu
 	m.Question = make([]dns.Question, 1)
 	m.Question[0] = dns.Question{dns.Fqdn(domain), query_type, dns.ClassINET}
 	c := new(dns.Client)
-	c.DialTimeout = time.Second * 5
+	c.DialTimeout = time.Second * 10
 	var retry int = 0
 LABEL_RETRY:
 	in, _, err := c.Exchange(m, queryServer)
 	if err != nil || len(in.Answer) == 0 {
 		if retry == 2 {
+
 			return nil, err
 		} else {
+			fmt.Printf("第%d次发送失败，重试...",retry)
 			retry++
 			goto LABEL_RETRY
 		}
