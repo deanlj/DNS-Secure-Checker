@@ -30,20 +30,21 @@ func main() {
                 false, // global
         )
         util.FailOnError(err, "设置QOS失败","设置QOS成功")
-        msgs, err := ch.Consume(
-                q.Name, // queue
-                "",     // consumer
-                false,  // auto-ack
-                false,  // exclusive
-                false,  // no-local
-                false,  // no-wait
-                nil,    // args
-        )
-        util.FailOnError(err, "注册consumer失败","注册consumer成功")
+
         for{
-            log.Printf(" [*] 等待rpc请求...")
+            msgs, err := ch.Consume(
+                    q.Name, // queue
+                    "",     // consumer
+                    false,  // auto-ack
+                    false,  // exclusive
+                    false,  // no-local
+                    false,  // no-wait
+                    nil,    // args
+            )
+            util.FailOnError(err, "注册consumer失败","注册consumer成功")
+            log.Printf("等待rpc请求...")
             for d := range msgs {
-                      go func(){
+                      go func(d amqp.Delivery){
                         result_chan:=make(chan util.ResonseMessage)
                         end_chan:=make(chan bool)
                         message:=util.RequestMessage{}
@@ -80,7 +81,7 @@ func main() {
                           close(end_chan)
                           d.Ack(false)
                           log.Printf("[DEBUG]关闭ack")
-                      }()
+                      }(d)
               }
 
         }

@@ -21,7 +21,7 @@ function startConnRabbitMQ(){
     }
     conn.on("error",function(err){
       if(err.message!=="Connection closing"){
-        console.log("[x]Error:"+err);
+        console.log("[x]Connection Error:"+err);
         return
       }
     });
@@ -39,11 +39,11 @@ function startConnRabbitMQ(){
 function startChannel(){
   amqpConn.createConfirmChannel(function(err,ch){
     if(err){
-      console.log("[x]Error:"+err);
+      console.log("[x]Create Chann Error:"+err);
       return
     }
     ch.on("error",function(err){
-        console.log("[x]Error:"+err);
+        console.log("[x]Channel Error:"+err);
         return
     });
     ch.on("close",function(){
@@ -65,19 +65,27 @@ io.on("connection",function(socket){
   socket.on('disconnect', function(){
    console.log('user disconnected');
   });
+  // var queue_random=null;
+  // pubChannel.assertQueue('', {exclusive: true,autoDelete:true}, function(err, q) {
+  //
+  // }
   socket.on('domain',function(data){
     console.log('Data:'+data)
     //  传递给后端的rabbitmq服务器
     var queue_data={domain:data,id:uuid.v1()}
     try {
-           pubChannel.assertQueue('', {exclusive: true}, function(err, q) {
+           pubChannel.assertQueue('', {exclusive: true,autoDelete:true}, function(err, q) {
             var corr = queue_data.id;
-            console.log(' [x] Requesting dns for (%s)', queue_data.domain);
+            console.log(' [*] Requesting dns for (%s)', queue_data.domain);
             pubChannel.consume(q.queue, function(msg) {
               if (msg.properties.correlationId == corr) {
                 var response_data=msg.content.toString();
-                console.log(' [.] 获得worker反馈 %s',response_data);
                 socket.emit('message',response_data)
+                var obj=JSON.parse(response_data)
+                if(obj.type=="end"){
+                  console.log("End the queue")
+                  pubChannel.cancel(msg.fields.consumerTag);
+                }
               }
             }, {noAck: true});
             pubChannel.sendToQueue('dns_queue',
@@ -85,7 +93,8 @@ io.on("connection",function(socket){
             { correlationId: corr, replyTo: q.queue });
           });
     } catch (e) {
-        console.log(e)
+      // pubChannel.deleteQueue(q.queue)
+      return
     }
   });
 });
