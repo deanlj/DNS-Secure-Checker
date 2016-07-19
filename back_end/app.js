@@ -52,9 +52,8 @@ function startChannel(){
     });
     ch.assertQueue("dns_queue", {durable: false});
     pubChannel=ch;
-
     console.log("[*]Rabbitmq channel is ready now!")
-  })
+  });
 }
 startConnRabbitMQ();
 // io操作代码
@@ -71,14 +70,14 @@ io.on("connection",function(socket){
     //  传递给后端的rabbitmq服务器
     var queue_data={domain:data,id:uuid.v1()}
     try {
-      pubChannel.assertQueue('', {exclusive: true}, function(err, q) {
-            var corr = uuid.v1();
+           pubChannel.assertQueue('', {exclusive: true}, function(err, q) {
+            var corr = queue_data.id;
             console.log(' [x] Requesting dns for (%s)', queue_data.domain);
             pubChannel.consume(q.queue, function(msg) {
               if (msg.properties.correlationId == corr) {
                 var response_data=msg.content.toString();
                 console.log(' [.] 获得worker反馈 %s',response_data);
-                socket.emit('message',formatMessage(response_data))
+                socket.emit('message',response_data)
               }
             }, {noAck: true});
             pubChannel.sendToQueue('dns_queue',
@@ -88,7 +87,6 @@ io.on("connection",function(socket){
     } catch (e) {
         console.log(e)
     }
-
   });
 });
 

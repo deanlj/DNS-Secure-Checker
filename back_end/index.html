@@ -3,12 +3,18 @@
   <head>
     <meta charset="utf-8">
     <title>DNS安全检查</title>
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css" media="screen" title="no title" charset="utf-8">
     <style media="screen">
       .main{
         margin-top: 2em;
       }
+      .info-box{
+        padding: 0.5em 0.3em;
+        border-radius: 0.3em;
+
+      }
     </style>
-    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css" media="screen" title="no title" charset="utf-8">
   </head>
   <body>
     <div class="">
@@ -36,26 +42,31 @@
              <label>
                <input type="checkbox">　DNSSec验证
              </label>
-
            </div>
         </div>
       </div>
+    </div>
+    <div class="container-fluid main">
       <div class="row">
           <div class="main">
-
+            <div class="col-md-12">
+              <div class="alert">
+              </div>
+            </div>
             <div class="col-md-6 col-sm-12">
-              <div class="message well">
+              <div class="dns-message well">
 
               </div>
             </div>
-            <div class="col-md-6 col-sm-12 we">
-              <div class="result well">
+            <div class="col-md-6 col-sm-12 ">
+              <div class="dnssec-message well">
+
               </div>
             </div>
           </div>
       </div>
     </div>
-
+   </div>
 
 
     <script src="//cdn.bootcss.com/socket.io/1.4.8/socket.io.js"></script>
@@ -64,33 +75,48 @@
     <script>
       var socket = io.connect('http://localhost:5000');
       socket.on('domain-message', function(msg){
-        console.log(msg)
+        $(".alert").empty();
         if(msg.Type&&msg.Type=='start'){
-          $('.result').append($('<p class="info">').text(msg.Message));
+          $('.alert').append($('<p class="info">').text(msg.Message));
         }else{
-          $('.result').append($('<p class="info">').text(msg.Message));
+          $('.alert').append($('<p class="info">').text(msg.Message));
         }
         //
       });
       socket.on('welcome',function(msg){
-         $('.result').append($('<li>').text(msg.Message));
+        $(".alert").empty();
+        $('.alert').append($('<p class="info">').text(msg.Message));
       })
       socket.on('message',function(msg){
-         var obj=JSON.parse(msg.Message);
-         console.log(obj);
-         if(obj.error&&obj.error!==""){
-            $('.message').append($('<p class="bg-error">').text(obj.message));
+         var obj=JSON.parse(msg);
+         if(obj.type==="message"){
+          $(".alert").empty();
+          $('.alert').append($('<p class="info">').text(obj.message));
+           return
+         }
+         if(obj.error!==""){
+            if(obj.type&&obj.type==="dns"){
+                $('.dns-message').append($('<p class="bg-danger info-box">').text(obj.message));
+            }else if(obj.type&&obj.type=="dnssec"){
+                $('.dnssec-message').append($('<p class="bg-danger info-box">').text(obj.message));
+            }
          }else{
-             $('.message').append($('<p class="bg-info">').text(obj.message));
+           if(obj.type&&obj.type==="dns"){
+               $('.dns-message').append($('<p class="bg-info info-box">').text(obj.message));
+           }else if(obj.type&&obj.type=="dnssec"){
+               $('.dnssec-message').append($('<p class="bg-info info-box">').text(obj.message));
+           }
          }
       })
       $('#dns-form').submit(function(){
          if( $('#domain').val() == ""){
-           alert("No Domain is submitted!");
+           alert("尚未填写需要查询的域名名称!");
            return
          }
          socket.emit('domain', $('#domain').val());
          $('#m').val('');
+         $(".dns-message").empty();
+         $(".dnssec-message").empty();
          return false;
       });
     </script>
