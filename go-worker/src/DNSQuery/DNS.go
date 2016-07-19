@@ -4,7 +4,7 @@ package DNSQuery
 import (
 	"errors"
 	"fmt"
-	"log"
+	// "log"
 	// "strconv"
 	// "strconv"
 	// "strings"
@@ -18,7 +18,7 @@ func GetIPv4List(domain string, server string, port int) ([]string, error) {
 	answers, _, err := Query(domain, dns.TypeA, server, port)
 	addressList := []string{}
 	if err != nil {
-		log.Panicf("%v", err)
+		// log.Panicf("%v", err)
 		return []string{}, err
 	} else {
 		for _, answer := range answers {
@@ -37,7 +37,7 @@ func GetIPv6List(domain string, server string, port int) ([]string, error) {
 	answers, _, err := Query(domain, dns.TypeAAAA, server, port)
 	addressList := []string{}
 	if err != nil {
-		log.Panicf("%v", err)
+		// log.Panicf("%v", err)
 		return []string{}, err
 	} else {
 		for _, answer := range answers {
@@ -57,7 +57,7 @@ func GetNSList(domain string, server string, port int) ([]string, error) {
 	answers, _, err := Query(domain, dns.TypeNS, server, port)
 	nsList := []string{}
 	if err != nil {
-		log.Panicf("%v", err)
+		// log.Panicf("%v", err)
 		return []string{}, err
 	} else {
 		for _, answer := range answers {
@@ -77,7 +77,7 @@ func GetMXList(domain string, server string, port int) ([]string, error) {
 	answers, _, err := Query(domain, dns.TypeMX, server, port)
 	mxList := []string{}
 	if err != nil {
-		log.Panicf("%v", err)
+		// log.Panicf("%v", err)
 		return []string{}, err
 	} else {
 		for _, answer := range answers {
@@ -109,7 +109,7 @@ func GetTXTList(domain string, server string, port int) ([]string, error) {
 	answers, _, err := Query(domain, dns.TypeTXT, server, port)
 	txtList := []string{}
 	if err != nil {
-		log.Panicf("%v", err)
+		// log.Panicf("%v", err)
 		return []string{}, err
 	} else {
 		for _, answer := range answers {

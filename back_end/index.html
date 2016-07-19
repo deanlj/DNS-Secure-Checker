@@ -3,38 +3,88 @@
   <head>
     <meta charset="utf-8">
     <title>DNS安全检查</title>
-    <script src="//cdn.bootcss.com/socket.io/1.4.8/socket.io.js"></script>
-    <script src="//cdn.bootcss.com/jquery/2.2.4/jquery.js"></script>
+    <style media="screen">
+      .main{
+        margin-top: 2em;
+      }
+    </style>
+    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css" media="screen" title="no title" charset="utf-8">
   </head>
   <body>
+    <div class="">
 
-    <form>
-      <input name="domain" id="domain"/>
-      <button>提交域名</button>
-    </form>
+    </div>
+    <div class="container main">
+      <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+          <form id="dns-form">
+            <div class="input-group">
+              <input type="text" class="form-control" name="domain" id="domain" required placeholder="请输入需要查询的域名">
+              <span class="input-group-btn" >
+                <button class="btn btn-primary" type="submit">点击查询</button>
+              </span>
+            </div><!-- /input-group -->
+          </form>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+          <div class="checkbox">
+             <label>
+               <input type="checkbox"> DNS检查
+             </label>
+             <label>
+               <input type="checkbox">　DNSSec验证
+             </label>
 
-    <div id="result">
+           </div>
+        </div>
+      </div>
+      <div class="row">
+          <div class="main">
+
+            <div class="col-md-6 col-sm-12">
+              <div class="message well">
+
+              </div>
+            </div>
+            <div class="col-md-6 col-sm-12 we">
+              <div class="result well">
+              </div>
+            </div>
+          </div>
+      </div>
     </div>
-    <div id="message">
-    </div>
+
+
+
+    <script src="//cdn.bootcss.com/socket.io/1.4.8/socket.io.js"></script>
+    <script src="//cdn.bootcss.com/jquery/2.2.4/jquery.js"></script>
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
     <script>
       var socket = io.connect('http://localhost:5000');
       socket.on('domain-message', function(msg){
         console.log(msg)
         if(msg.Type&&msg.Type=='start'){
-          $('#result').append($('<ol>').text(msg.Message));
+          $('.result').append($('<p class="info">').text(msg.Message));
         }else{
-          $('#result').append($('<li>').text(msg.Message));
+          $('.result').append($('<p class="info">').text(msg.Message));
         }
         //
       });
       socket.on('welcome',function(msg){
-         $('#result').append($('<li>').text(msg.Message));
+         $('.result').append($('<li>').text(msg.Message));
       })
       socket.on('message',function(msg){
-         $('#message').append($('<li>').text(msg.Message));
+         var obj=JSON.parse(msg.Message);
+         console.log(obj);
+         if(obj.error&&obj.error!==""){
+            $('.message').append($('<p class="bg-error">').text(obj.message));
+         }else{
+             $('.message').append($('<p class="bg-info">').text(obj.message));
+         }
       })
-      $('form').submit(function(){
+      $('#dns-form').submit(function(){
          if( $('#domain').val() == ""){
            alert("No Domain is submitted!");
            return

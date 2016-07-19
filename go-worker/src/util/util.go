@@ -1,10 +1,32 @@
 package util
 
 import (
+	"fmt"
 	"regexp"
 	"sort"
 	"strings"
+	"encoding/json"
+	"log"
 )
+func FailOnError(err error,error_message string,success string) {
+        if err != nil {
+                log.Fatalf("%s: %s", error_message, err)
+                panic(fmt.Sprintf("%s: %s", error_message, err))
+        }else{
+                log.Println(success)
+        }
+}
+// 格式化信息
+func FmTMessage(message string,err_ string,type_ string)(string,error){
+  return_message:=ResonseMessage{message,err_,type_}
+  m,err:=json.Marshal(return_message)
+  if err != nil {
+          log.Fatalf("%s", err)
+          return "",err
+  }else{
+          return string(m),nil
+  }
+}
 
 // ExtractLastRow 提取字符串数组中最后的一列数据
 func ExtractLastRow(dataRow []string) []string {
