@@ -58,8 +58,8 @@ func main() {
                         for{
                            select{
                               case response:=<-result_chan:
-                                m,err:=json.Marshal(response)
-                                err = ch.Publish(
+                                m,_:=json.Marshal(response)
+                                _ = ch.Publish(
                                         "",        // exchange
                                         d.ReplyTo, // routing key
                                         false,     // mandatory
@@ -69,7 +69,7 @@ func main() {
                                                 CorrelationId: d.CorrelationId,
                                                 Body:          []byte(string(m)),
                                         })
-                                util.FailOnError(err, "发布消息失败","发布消息成功")
+                                // util.FailOnError(err, "发布消息失败","发布消息成功")
                                 case <-end_chan:
                                     log.Printf("[DEBUG]结束channel")
                                     goto NEXT
