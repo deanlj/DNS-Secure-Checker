@@ -94,16 +94,20 @@
           $('.alert').append($('<p class="info">').text(obj.message));
            return
          }
+         console.log(obj)
+         if(obj.type===""){
+           return
+         }
          if(obj.error!==""){
-            if(obj.type&&obj.type==="dns"){
+            if(obj.type.indexOf("dns_")===0){
                 $('.dns-message').append($('<p class="bg-danger info-box">').text(obj.message));
-            }else if(obj.type&&obj.type=="dnssec"){
+            }else if(obj.type.indexOf("dnssec_")===0){
                 $('.dnssec-message').append($('<p class="bg-danger info-box">').text(obj.message));
             }
          }else{
-           if(obj.type&&obj.type==="dns"){
+           if(obj.type.indexOf("dns_")===0){
                $('.dns-message').append($('<p class="bg-info info-box">').text(obj.message));
-           }else if(obj.type&&obj.type=="dnssec"){
+           }else if(obj.type.indexOf("dnssec_")===0){
                $('.dnssec-message').append($('<p class="bg-info info-box">').text(obj.message));
            }
          }
