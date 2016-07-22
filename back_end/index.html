@@ -15,6 +15,9 @@
         justify-content: flex-start;
             margin-bottom: 1em;
       }
+      .progress{
+        height: 1px;
+      }
       .check_type{
         font-weight: bold;
         min-width: 150px;
@@ -25,20 +28,55 @@
         color: white;
         padding-top: 0.2em;
         min-height: 6em;
-        padding-left: 0.5em
+        padding-left: 0.5em;
+        -moz-box-shadow: 2px 2px 5px rgba(51, 51, 51, 0.71);
+        -webkit-box-shadow: 2px 2px 5px rgba(51, 51, 51, 0.71);
+        box-shadow: 2px 2px 5px rgba(51, 51, 51, 0.71);
+        -ms-filter: "progid:DXImageTransform.Microsoft.Shadow(Strength=4, Direction=135, Color='#000000')";
+        -webkit-transition: all 300ms ease-in-out;
+        -moz-transition: all 300ms ease-in-out;
+        -ms-transition: all 300ms ease-in-out;
+        -o-transition: all 300ms ease-in-out;
+        transition: all 300ms ease-in-out;
+        transform-style: preserve-3d;
       }
       .info-box{
         padding-top: 0.5em;
+        padding-right: 0.5em;
+        padding-left: 0.5em;
+        padding-bottom: : 0.5em;
         flex-grow: 1;
         font-size: 1.1em;
-        padding-left: 0.5em;
+
         word-wrap: break-word;
         text-align: left;
         border-radius: 0em 0.3em 0.3em 0em;
         background-color: rgba(55, 165, 243, 0.14);
+        -moz-box-shadow: 2px 2px 5px rgba(51, 51, 51, 0.71);
+        -webkit-box-shadow: 2px 2px 5px rgba(51, 51, 51, 0.71);
+        box-shadow: 2px 2px 5px rgba(51, 51, 51, 0.71);
+        -ms-filter: "progid:DXImageTransform.Microsoft.Shadow(Strength=4, Direction=135, Color='#000000')";
+        -webkit-transition: all 300ms ease-in-out;
+        -moz-transition: all 300ms ease-in-out;
+        -ms-transition: all 300ms ease-in-out;
+        -o-transition: all 300ms ease-in-out;
+        transition: all 300ms ease-in-out;
+        transform-style: preserve-3d;
       }
       .item-danger{
         background-color: rgba(255, 119, 119, 0.18);
+      }
+      /*.progress-bar{
+        display: flex;
+        padding-top: 1em;
+        padding-bottom: 1em;
+      }*/
+
+      .dns-header{
+          text-align: center;
+          font-weight: bold;
+          font-family: monospace;
+          color:#777;
       }
 
     </style>
@@ -80,25 +118,29 @@
               <div class="alert">
               </div>
             </div> -->
-            <div class="progress col-md-6 col-sm-12">
-              <div class="progress-bar" id="dns-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
-                0%
+
+            <div class="col-md-6 col-sm-12 well">
+              <div class="page-header dns-header col-sm-12">
+                  <h1>DNS数据查询<small></small></h1>
+              </div>
+              <div class="progress progress-striped active col-sm-12">
+                <div class="progress-bar" id="dns-progress-bar"role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                  0%
+                </div>
+              </div>
+              <div class="dns-message col-sm-12">
               </div>
             </div>
-            <div class="progress col-md-6 col-sm-12">
-              <div class="progress-bar" id="dnssec-progress-bar"role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
-                0%
+            <div class="col-md-6 col-sm-12 well">
+              <div class="page-header dns-header col-sm-12">
+                  <h1>DNSSEC数据验证<small></small></h1>
               </div>
-            </div>
-            <div class="col-md-6 col-sm-12">
-              <div class="dns-message well">
-
+              <div class="progress  progress-striped active col-sm-12">
+                <div class="progress-bar" id="dnssec-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                  0%
+                </div>
               </div>
-            </div>
-
-            <div class="col-md-6 col-sm-12 ">
-              <div class="dnssec-message well">
-
+              <div class="dnssec-message col-sm-12">
               </div>
             </div>
           </div>

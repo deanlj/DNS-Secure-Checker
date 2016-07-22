@@ -167,6 +167,5 @@ func WebProcessDNSMain(domain string,result chan util.ResonseMessage) {
 		f:=fmt.Sprintf("域名　%s　的权威NS服务器TCP检查失败,不支持的服务器列表如下:%v", domain, unsupport_list)
 		SendToChannel(f,"query_error","dns_TCP_97%",result)
 	}
-
-  	SendToChannel(f, "", "dns_结束_100%", result)
+  	SendToChannel(fmt.Sprintf("域名DNS数据提取流程完成"), "", "dns_结束_100%", result)
 }

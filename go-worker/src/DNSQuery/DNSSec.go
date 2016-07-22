@@ -21,7 +21,7 @@ func _SendDNSSecRequest(domain string, authenticationServer string, port int, qu
 LABEL_RETRY:
 	in, _, err := c.Exchange(m, queryServer)
 	if err != nil || len(in.Answer) == 0 {
-		if retry == 2 {
+		if retry == 3 {
 
 			return nil, err
 		} else {
